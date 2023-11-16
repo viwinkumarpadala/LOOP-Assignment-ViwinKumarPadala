@@ -15,7 +15,7 @@ from pathlib import Path
 import uuid
 import os
 import threading
-
+from flask import make_response
 
 #Creating an instance of Flask Class
 app = Flask(__name__)
@@ -409,11 +409,11 @@ processing_info = {}
 
 #Processing all the store ids information
 def process_all_stores(filename):
-    all_stores_query = text("SELECT DISTINCT store_id FROM status_data")
-    status_data_query = text("SELECT sd.store_id, sd.status, sd.timestamp_utc, COALESCE(td.timezone_str, 'America/Chicago') AS timezone_str FROM status_data sd LEFT JOIN timezones td ON sd.store_id = td.store_id")
+    # all_stores_query = text("SELECT DISTINCT store_id FROM status_data")
+    status_data_query = text("SELECT sd.store_id, sd.status, sd.timestamp_utc, COALESCE(td.timezone_str, 'America/Chicago') AS timezone_str FROM status_data sd LEFT JOIN timezones td ON sd.store_id = td.store_id WHERE sd.store_id='8419537941919820732'")
     business_hours_query = text("SELECT * FROM business_hours")
 
-    df_all_stores = pd.read_sql(all_stores_query, con=connection)
+    # df_all_stores = pd.read_sql(all_stores_query, con=connection)
     df_status_data = pd.read_sql(status_data_query, con=connection)
     df_business_hours = pd.read_sql(business_hours_query, con=connection)
     current_timestamp = df_status_data['timestamp_utc'].max()
@@ -471,7 +471,10 @@ def get_report():
     if report_id == "Test" or processing_info.get(report_id) == "Complete":
         report_path = os.path.join(REPORTS_DIR, f"{report_id}.csv")
         if os.path.exists(report_path):
-            return send_file(report_path, as_attachment=True)
+            response = make_response(send_file(report_path, as_attachment=True))
+            response.headers['Content-Type'] = 'application/csv'  
+            response.headers['status'] = 'Complete'
+            return response
         else:
             return jsonify({"status": "Report not found"})
     elif processing_info.get(report_id) == "Running":
