@@ -1,4 +1,4 @@
-# LOOP-Assignment-ViwinKumarPadala
+# Store_Monitoring_System
 
 ## Technologies used: 
 Flask web framework, Mysql database
